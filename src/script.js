@@ -6,7 +6,6 @@ import GUI from 'lil-gui'
 import planetVertexShader from './shaders/planet/vertex.glsl'
 import planetFragmentShader from './shaders/planet/fragment.glsl'
 import { mergeVertices } from 'three/examples/jsm/utils/BufferGeometryUtils.js'
-import { Wireframe } from 'three/examples/jsm/Addons.js'
 /**
  * Base
  */
@@ -24,19 +23,19 @@ const scene = new THREE.Scene()
 const rgbeLoader = new RGBELoader()
 
 // Material
-debugObject.colorWaterDeep = '#002b3d'
-debugObject.colorWaterSurface = '#66a8ff'
-debugObject.colorSand = '#ffe894'
-debugObject.colorGrass = '#85d534'
+debugObject.colorWaterDeep = '#0b75a2'
+debugObject.colorWaterSurface = '#97cff2'
+debugObject.colorSand = '#cec5a6'
+debugObject.colorGrass = '#8abd56'
 debugObject.colorSnow = '#ffffff'
-debugObject.colorRock = '#bfbd8d'
+debugObject.colorRock = '#868574'
 
 // Uniforms
 const uniforms = {
   uTime: new THREE.Uniform(0),
-  uPositionFrequency: new THREE.Uniform(0.5),
-  uTimeFrequency: new THREE.Uniform(0.4),
-  uStrength: new THREE.Uniform(0.3),
+  uPositionFrequency: new THREE.Uniform(0.28),
+  uTimeFrequency: new THREE.Uniform(0.02),
+  uStrength: new THREE.Uniform(0.7),
   uColorWaterDeep: new THREE.Uniform(new THREE.Color(debugObject.colorWaterDeep)),
   uColorWaterSurface: new THREE.Uniform(new THREE.Color(debugObject.colorWaterSurface)),
   uColorSand: new THREE.Uniform(new THREE.Color(debugObject.colorSand)),
@@ -99,7 +98,7 @@ const depthMaterial = new CustomShaderMaterial({
 })
 
 
-let planetGeometry = new THREE.IcosahedronGeometry(2.5, 150)
+let planetGeometry = new THREE.IcosahedronGeometry(2.5, 250)
 planetGeometry = mergeVertices(planetGeometry)
 planetGeometry.computeTangents()
 

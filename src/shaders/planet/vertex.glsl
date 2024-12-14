@@ -6,7 +6,8 @@ uniform float uTimeFrequency;
 uniform float uStrength;
 
 varying float vElevation;
-
+varying vec3 vPosition;
+varying vec3 vSurfaceNormal;
 
 #include ../includes/simplexNoise4d.glsl
 
@@ -55,6 +56,8 @@ void main()
 
   // Varyings
   vElevation = elevation;
+  vPosition = csm_Position;
+  vSurfaceNormal = csm_Normal;
 
 }
 
