@@ -28,18 +28,20 @@ void main()
   float grassMix = step(-0.06, vElevation);
   color = mix(color, uColorGrass, grassMix);
 
+  // Rock
+  float rockMixOn = step(-0.01, vElevation);
+  vec3 normalizedPosition = normalize(vPosition);
+  float verticalness = 1.0 - abs(dot(vSurfaceNormal, normalizedPosition));
+  float rockThreshold = 0.2;
+  float rockMix = smoothstep(rockThreshold, rockThreshold + 0.1, verticalness);
+  color = mix(color, uColorRock, rockMix*(rockMixOn));
+
   // Snow
   float snowThreshold = 0.35;
   snowThreshold += simplexNoise4d(vec4(vPosition*15.5, 0.0))*0.1;
   float snowMix = step(snowThreshold, vElevation);
   color = mix(color, uColorSnow, snowMix);
 
-   // Rock
-   vec3 normalizedPosition = normalize(vPosition);
-   float verticalness = 1.0 - abs(dot(vSurfaceNormal, normalizedPosition));
-   float rockThreshold = 0.2;
-   float rockMix = smoothstep(rockThreshold, rockThreshold + 0.1, verticalness);
-   color = mix(color, uColorRock, rockMix);
 
    csm_DiffuseColor = vec4(color, 1.0);
 }
