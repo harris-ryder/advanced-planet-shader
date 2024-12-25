@@ -6,6 +6,12 @@ import GUI from 'lil-gui'
 import planetVertexShader from './shaders/planet/vertex.glsl'
 import planetFragmentShader from './shaders/planet/fragment.glsl'
 import { mergeVertices } from 'three/examples/jsm/utils/BufferGeometryUtils.js'
+
+/**
+ * Constants
+ */
+const MAX_CRATERS = 50 // Set to match vertex value
+
 /**
  * Base
  */
@@ -29,6 +35,36 @@ debugObject.colorSand = '#cec5a6'
 debugObject.colorGrass = '#8abd56'
 debugObject.colorSnow = '#ffffff'
 debugObject.colorRock = '#868574'
+// Material - Craters
+debugObject.craterCount = 20
+debugObject.rimSteepness = 1.0
+debugObject.rimWidth = 0.2
+debugObject.smoothness = 0.2
+debugObject.floorHeight = -0.2
+
+// Crators
+const generateCraters = () => {
+  const craters = []
+  for(let i = 0; i < MAX_CRATERS; i++) {
+    // Generate random point on sphere surface
+    const theta = Math.random() * Math.PI * 2 // Azimuthal angle
+    const phi = Math.acos(2 * Math.random() - 1) // Polar angle
+    const radius = 2.5 // Sphere radius
+    
+    const x = radius * Math.sin(phi) * Math.cos(theta)
+    const y = radius * Math.sin(phi) * Math.sin(theta)
+    const z = radius * Math.cos(phi)
+   
+    const rawRadius = Math.random()*0.8
+    const biasRadius = Math.pow(rawRadius, 4.0)
+
+    craters.push({
+      position: new THREE.Vector3(x, y, z),
+      radius: biasRadius
+    })
+  }
+  return craters
+}
 
 // Uniforms
 const uniforms = {
@@ -42,6 +78,13 @@ const uniforms = {
   uColorGrass: new THREE.Uniform(new THREE.Color(debugObject.colorGrass)),
   uColorSnow: new THREE.Uniform(new THREE.Color(debugObject.colorSnow)),
   uColorRock: new THREE.Uniform(new THREE.Color(debugObject.colorRock)),
+  uCraters: new THREE.Uniform(generateCraters()), 
+  uCratersCount: new THREE.Uniform(debugObject.craterCount),
+  uRimSteepness: new THREE.Uniform(debugObject.rimSteepness),
+  uRimWidth: new THREE.Uniform(debugObject.rimWidth),
+  uSmoothness: new THREE.Uniform(debugObject.smoothness),
+  uFloorHeight: new THREE.Uniform(debugObject.floorHeight),
+  uCratersCount: new THREE.Uniform(debugObject.craterCount)
 }
 
 /**
@@ -56,6 +99,18 @@ gui.addColor(debugObject, 'colorSand').onChange(() => uniforms.uColorSand.value.
 gui.addColor(debugObject, 'colorGrass').onChange(() => uniforms.uColorGrass.value.set(debugObject.colorGrass))
 gui.addColor(debugObject, 'colorSnow').onChange(() => uniforms.uColorSnow.value.set(debugObject.colorSnow))
 gui.addColor(debugObject, 'colorRock').onChange(() => uniforms.uColorRock.value.set(debugObject.colorRock))
+gui.add(debugObject, 'craterCount', 1, MAX_CRATERS, 1).name('Crater Count')
+gui.add(uniforms.uRimSteepness, 'value', 0, 3, 0.01).name('Rim Steepness')
+gui.add(uniforms.uRimWidth, 'value', 0.1, 3, 0.01).name('Rim Width')
+gui.add(uniforms.uSmoothness, 'value', 0.1, 3, 0.01).name('Smoothness')
+gui.add(uniforms.uFloorHeight, 'value', -1, 1, 0.01).name('Floor Height')
+gui.add({ 
+    regenerate: () => {
+        uniforms.uCraters.value = generateCraters();
+        uniforms.uCratersCount.value = debugObject.craterCount;
+    }
+}, 'regenerate').name('Regenerate Craters');
+
 
 /**
  * Environment map
