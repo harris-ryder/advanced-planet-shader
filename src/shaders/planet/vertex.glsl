@@ -29,54 +29,26 @@ float smoothMin(float a, float b, float k) {
     return a * h + b * (1.0 - h) - k * h * (1.0 - h);
 }
 
-float BiasFunction(float x, float bias) {
-    float k = pow(1.0 - bias, 3.0);
-    return (x * k) / (x * k - x + 1.0);
-}
-
 float getWobble(vec3 position)
 {
-    vec3 warpedPosition = position;
-    warpedPosition += simplexNoise4d(vec4(
-        position,
-        uTime * uTimeFrequency
-    ));
-
-    float wobble = simplexNoise4d(vec4(
-        position * uPositionFrequency, // XYZ
-        uTime * uTimeFrequency         // W
-    )) * uStrength;
-  
-    wobble += simplexNoise4d(vec4(
-        warpedPosition * uPositionFrequency*2.0, // XYZ
-        uTime * uTimeFrequency         // W
-    )) * uStrength*0.5;
-
-
-    return pow(abs(wobble), 2.0) * sign(wobble)* -1.0;
-}
-
-float addCrater(vec3 position)
-{
-    float craterDepth = 0.0;
+    float wobble = 0.0;
+    float amplitude = 1.0;
+    float frequency = 1.0;
     
-    for(int i = 0; i < MAX_CRATERS; i++)
+    // FBM parameters
+    const int OCTAVES = 4;
+    const float PERSISTENCE = 0.5;
+    const float LACUNARITY = 2.0;
+    
+    for(int i = 0; i < OCTAVES; i++)
     {
-       if(i >= uCratersCount) break; 
-
-       float biasedRadius = uCraters[i].radius * BiasFunction(length(position - uCraters[i].position), 0.3);
-
-       float x = length(position - uCraters[i].position)/uCraters[i].radius;
-       float cavity = x * x - 1.0;
-       float rimX = min(abs(x) - 1.0 - uRimWidth, 0.0);
-       float rim = uRimSteepness * rimX * rimX;
-
-       float craterShape = smoothMin(cavity, uFloorHeight, -uSmoothness);
-       craterShape = smoothMin(craterShape, rim, uSmoothness);
-       craterDepth += craterShape * uCraters[i].radius;
+        wobble += simplexNoise4d(vec4(position * frequency, 0.0)) * (uStrength * amplitude);
+        
+        frequency *= LACUNARITY;
+        amplitude *= PERSISTENCE;
     }
-    
-    return craterDepth; 
+
+    return pow(abs(wobble), 2.0) * sign(wobble) * -1.0;
 }
 
 void main()
@@ -91,10 +63,10 @@ void main()
   vec3 positionB = csm_Position + biTangent * shift;
 
   // Wobble
-  float elevation = addCrater(csm_Position);
+  float elevation = getWobble(csm_Position);
   csm_Position += elevation * normal;
-  positionA += addCrater(positionA)*normal;
-  positionB += addCrater(positionB)*normal;
+  positionA += getWobble(positionA)*normal;
+  positionB += getWobble(positionB)*normal;
 
   // Compute Normal 
   vec3 toA = normalize(positionA - csm_Position);
