@@ -6,18 +6,22 @@ import GUI from 'lil-gui'
 import planetVertexShader from './shaders/planet/vertex.glsl'
 import planetFragmentShader from './shaders/planet/fragment.glsl'
 import { mergeVertices } from 'three/examples/jsm/utils/BufferGeometryUtils.js'
-
-/**
- * Constants
- */
-const MAX_CRATERS = 50 // Set to match vertex value
+import { addDebugUniform } from './utils'
 
 /**
  * Base
  */
+
 // Debug
 const gui = new GUI({ width: 325 })
+const colorFolder = gui.addFolder('Color')
+const oceanFolder = gui.addFolder('Ocean')
+const mountainFolder = gui.addFolder('Mountains')
+colorFolder.close()
+
+
 const debugObject = {}
+const uniforms = {}
 
 // Canvas
 const canvas = document.querySelector('canvas.webgl')
@@ -28,88 +32,21 @@ const scene = new THREE.Scene()
 // Loaders
 const rgbeLoader = new RGBELoader()
 
-// Material
-debugObject.colorWaterDeep = '#0b75a2'
-debugObject.colorWaterSurface = '#97cff2'
-debugObject.colorSand = '#cec5a6'
-debugObject.colorGrass = '#8abd56'
-debugObject.colorSnow = '#ffffff'
-debugObject.colorRock = '#868574'
-// Material - Craters
-debugObject.craterCount = 20
-debugObject.rimSteepness = 1.0
-debugObject.rimWidth = 0.2
-debugObject.smoothness = 0.2
-debugObject.floorHeight = -0.2
+// Colors
+addDebugUniform('uColorWaterDeep', '#0b75a2', { label: 'Water Deep Color' }, debugObject, uniforms, colorFolder)
+addDebugUniform('uColorWaterSurface', '#97cff2', { label: 'Water Surface Color' }, debugObject, uniforms, colorFolder)
+addDebugUniform('uColorSand', '#cec5a6', { label: 'Sand Color' }, debugObject, uniforms, colorFolder)
+addDebugUniform('uColorGrass', '#8abd56', { label: 'Grass Color' }, debugObject, uniforms, colorFolder)
+addDebugUniform('uColorSnow', '#ffffff', { label: 'Snow Color' }, debugObject, uniforms, colorFolder)
+addDebugUniform('uColorRock', '#808080', { label: 'Rock Color' }, debugObject, uniforms, colorFolder)
 
-// Crators
-const generateCraters = () => {
-  const craters = []
-  for(let i = 0; i < MAX_CRATERS; i++) {
-    // Generate random point on sphere surface
-    const theta = Math.random() * Math.PI * 2 // Azimuthal angle
-    const phi = Math.acos(2 * Math.random() - 1) // Polar angle
-    const radius = 2.5 // Sphere radius
-    
-    const x = radius * Math.sin(phi) * Math.cos(theta)
-    const y = radius * Math.sin(phi) * Math.sin(theta)
-    const z = radius * Math.cos(phi)
-   
-    const rawRadius = Math.random()*0.8
-    const biasRadius = Math.pow(rawRadius, 4.0)
-
-    craters.push({
-      position: new THREE.Vector3(x, y, z),
-      radius: biasRadius
-    })
-  }
-  return craters
-}
-
-// Uniforms
-const uniforms = {
-  uTime: new THREE.Uniform(0),
-  uPositionFrequency: new THREE.Uniform(0.28),
-  uTimeFrequency: new THREE.Uniform(0.02),
-  uStrength: new THREE.Uniform(0.7),
-  uColorWaterDeep: new THREE.Uniform(new THREE.Color(debugObject.colorWaterDeep)),
-  uColorWaterSurface: new THREE.Uniform(new THREE.Color(debugObject.colorWaterSurface)),
-  uColorSand: new THREE.Uniform(new THREE.Color(debugObject.colorSand)),
-  uColorGrass: new THREE.Uniform(new THREE.Color(debugObject.colorGrass)),
-  uColorSnow: new THREE.Uniform(new THREE.Color(debugObject.colorSnow)),
-  uColorRock: new THREE.Uniform(new THREE.Color(debugObject.colorRock)),
-  uCraters: new THREE.Uniform(generateCraters()), 
-  uCratersCount: new THREE.Uniform(debugObject.craterCount),
-  uRimSteepness: new THREE.Uniform(debugObject.rimSteepness),
-  uRimWidth: new THREE.Uniform(debugObject.rimWidth),
-  uSmoothness: new THREE.Uniform(debugObject.smoothness),
-  uFloorHeight: new THREE.Uniform(debugObject.floorHeight),
-  uCratersCount: new THREE.Uniform(debugObject.craterCount)
-}
-
-/**
- * GUI
- */
-gui.add(uniforms.uPositionFrequency, 'value', 0, 2, 0.001).name('uPositionFrequency')
-gui.add(uniforms.uTimeFrequency, 'value', 0, 2, 0.001).name('uTimeFrequency')
-gui.add(uniforms.uStrength, 'value', 0, 2, 0.001).name('uStrength')
-gui.addColor(debugObject, 'colorWaterDeep').onChange(() => uniforms.uColorWaterDeep.value.set(debugObject.colorWaterDeep))
-gui.addColor(debugObject, 'colorWaterSurface').onChange(() => uniforms.uColorWaterSurface.value.set(debugObject.colorWaterSurface))
-gui.addColor(debugObject, 'colorSand').onChange(() => uniforms.uColorSand.value.set(debugObject.colorSand))
-gui.addColor(debugObject, 'colorGrass').onChange(() => uniforms.uColorGrass.value.set(debugObject.colorGrass))
-gui.addColor(debugObject, 'colorSnow').onChange(() => uniforms.uColorSnow.value.set(debugObject.colorSnow))
-gui.addColor(debugObject, 'colorRock').onChange(() => uniforms.uColorRock.value.set(debugObject.colorRock))
-gui.add(debugObject, 'craterCount', 1, MAX_CRATERS, 1).name('Crater Count')
-gui.add(uniforms.uRimSteepness, 'value', 0, 3, 0.01).name('Rim Steepness')
-gui.add(uniforms.uRimWidth, 'value', 0.1, 3, 0.01).name('Rim Width')
-gui.add(uniforms.uSmoothness, 'value', 0.1, 3, 0.01).name('Smoothness')
-gui.add(uniforms.uFloorHeight, 'value', -1, 1, 0.01).name('Floor Height')
-gui.add({ 
-    regenerate: () => {
-        uniforms.uCraters.value = generateCraters();
-        uniforms.uCratersCount.value = debugObject.craterCount;
-    }
-}, 'regenerate').name('Regenerate Craters');
+// Numeric controls
+addDebugUniform('uOceanFloorDepth', 0.01, { min: 0, max: 4, step: 0.01, label: 'Ocean Floor Depth' }, debugObject, uniforms, oceanFolder)
+addDebugUniform('uOceanFloorSmoothing', 0.5, { min: 0, max: 4, step: 0.01, label: 'Ocean Floor Smoothing' }, debugObject, uniforms, oceanFolder)
+addDebugUniform('uOceanDepthMultiplier', 0.09, { min: 0, max: 2, step: 0.01, label: 'Ocean Depth Multiplier' }, debugObject, uniforms, oceanFolder)
+addDebugUniform('uOceanFloorStrength', 0.7, { min: 0, max: 8, step: 0.001, label: 'Mountain Strength' }, debugObject, uniforms, oceanFolder)
+addDebugUniform('uMountainStrength', 0.7, { min: 0, max: 8, step: 0.001, label: 'Mountain Strength' }, debugObject, uniforms, mountainFolder)
+addDebugUniform('uStrength', 4, { min: 0, max: 8, step: 0.001, label: 'Strength' }, debugObject, uniforms, gui)
 
 
 /**
@@ -122,10 +59,10 @@ rgbeLoader.load('/spruit_sunrise.hdr', (environmentMap) => {
   scene.backgroundBlurriness = 0.5
   scene.environment = environmentMap
 })
+
 /**
  * planet 
  */
-
 const planetMaterial = new CustomShaderMaterial({
   // CSM
   baseMaterial: THREE.MeshStandardMaterial,
@@ -236,7 +173,7 @@ const tick = () => {
   const elapsedTime = clock.getElapsedTime()
 
   // Materials
-  uniforms.uTime.value = elapsedTime
+  // uniforms.uTime.value = elapsedTime
 
 
   // Update controls

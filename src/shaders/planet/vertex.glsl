@@ -1,21 +1,14 @@
 attribute vec4 tangent;
 
-uniform float uTime;
-uniform float uPositionFrequency;
-uniform float uTimeFrequency;
 uniform float uStrength;
+uniform float uOceanFloorStrength;
+uniform float uMountainStrength;
 
-// Craters 
-#define MAX_CRATERS 50  
-uniform int uCratersCount; 
-uniform struct Crater {
-    vec3 position;
-    float radius;
-} uCraters[MAX_CRATERS];
-uniform float uRimSteepness;
-uniform float uRimWidth;
+uniform float uOceanFloorDepth;
+uniform float uOceanFloorSmoothing;
+uniform float uOceanDepthMultiplier;
+
 uniform float uSmoothness;
-uniform float uFloorHeight;
 
 varying float vElevation;
 varying vec3 vPosition;
@@ -29,6 +22,32 @@ float smoothMin(float a, float b, float k) {
     return a * h + b * (1.0 - h) - k * h * (1.0 - h);
 }
 
+float getMountains(vec3 position)
+{
+    float wobble = 0.0;
+    float amplitude = 1.0;
+    float frequency = 0.3;
+    
+    // FBM parameters
+    const int OCTAVES = 4;
+    const float PERSISTENCE = 1.0;
+    const float LACUNARITY = 1.5;
+    
+    for(int i = 0; i < OCTAVES; i++)
+    {
+        wobble += simplexNoise4d(vec4(position * frequency, 0.0)) * (uMountainStrength * amplitude);
+        frequency *= LACUNARITY;
+        amplitude *= PERSISTENCE;
+    }
+
+    return max(wobble*0.15, 0.0);
+}
+
+float noiseMask(vec3 position)
+{
+    return max(simplexNoise4d(vec4(position, 0.0)), 0.0);
+}
+
 float getWobble(vec3 position)
 {
     float wobble = 0.0;
@@ -36,20 +55,28 @@ float getWobble(vec3 position)
     float frequency = 1.0;
     
     // FBM parameters
-    const int OCTAVES = 4;
+    const int OCTAVES = 6;
     const float PERSISTENCE = 0.5;
     const float LACUNARITY = 2.0;
     
     for(int i = 0; i < OCTAVES; i++)
     {
-        wobble += simplexNoise4d(vec4(position * frequency, 0.0)) * (uStrength * amplitude);
-        
+        wobble += simplexNoise4d(vec4(position * frequency, 0.0)) * (uOceanFloorStrength * amplitude);
         frequency *= LACUNARITY;
         amplitude *= PERSISTENCE;
     }
 
-    return pow(abs(wobble), 2.0) * sign(wobble) * -1.0;
+    // return pow(abs(wobble), 2.0) * sign(wobble) * -1.0;
+    float oceanFloorShape = -uOceanFloorDepth + wobble * 0.15;
+    float continentShape = smoothMin(wobble, oceanFloorShape, uOceanFloorSmoothing);
+    continentShape = continentShape * mix(uOceanDepthMultiplier, 1.0, step(0.0, continentShape));
+
+    float mountainMask = 1.0;
+    float mountainShape = getMountains(position)*mountainMask;
+    float finalShape = 1.0 + (continentShape + mountainShape)*uStrength;
+    return finalShape; 
 }
+
 
 void main()
 {
