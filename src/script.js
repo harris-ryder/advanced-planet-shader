@@ -119,39 +119,17 @@ planet.CustomShaderMaterial = depthMaterial
 scene.add(planet)
 
 let oceanGeometry = new THREE.IcosahedronGeometry(3.45, 250)
-const oceanMaterial = new CustomShaderMaterial({
-  // CSM
-  baseMaterial: THREE.MeshPhysicalMaterial,
-  vertexShader: oceanVertexShader, 
-  uniforms: oceanUniforms,
-  silent: true,
-
-  // MeshPhysicalMaterial properties
+const oceanMaterial = new THREE.MeshPhysicalMaterial({
   color: '#0077ff',
   transparent: true,
   opacity: 0.6,
   roughness: 0.2,
   metalness: 0.1,
-  transmission: 0.9,  // Add transmission for glass-like effect
-  thickness: 0.5,     // Material thickness for refraction
-  ior: 1.33          // Index of refraction (1.33 is the value for water)
-})
-
-const oceanDepthMaterial = new CustomShaderMaterial({
-  // CSM
-  baseMaterial: THREE.MeshDepthMaterial,
-  vertexShader: planetVertexShader,
-  fragmentShader: planetFragmentShader,
-  uniforms: uniforms,
-  silent: true,
-
-  // MeshDepthMaterial
-  depthPacking: THREE.RGBADepthPacking
+  transmission: 0.9,
+  thickness: 0.5,
+  ior: 1.33
 })
 const ocean = new THREE.Mesh(oceanGeometry, oceanMaterial)
-oceanGeometry = mergeVertices(oceanGeometry)
-oceanGeometry.computeTangents()
-ocean.CustomShaderMaterial = oceanDepthMaterial
 scene.add(ocean)
 
 
