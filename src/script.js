@@ -67,9 +67,8 @@ addDebugUniform('uStrength', 4, { min: 0, max: 8, step: 0.001, label: 'Strength'
 /**
  * Environment map
  */
-rgbeLoader.load('/spruit_sunrise.hdr', (environmentMap) => {
+rgbeLoader.load('/multi_nebulae.hdr', (environmentMap) => {
   environmentMap.mapping = THREE.EquirectangularReflectionMapping
-
   scene.background = environmentMap
   scene.backgroundBlurriness = 0.5
   scene.environment = environmentMap
@@ -190,7 +189,7 @@ const renderer = new THREE.WebGLRenderer({
 renderer.shadowMap.enabled = true
 renderer.shadowMap.type = THREE.PCFSoftShadowMap
 renderer.toneMapping = THREE.ACESFilmicToneMapping
-renderer.toneMappingExposure = 1
+renderer.toneMappingExposure = 2
 renderer.setSize(sizes.width, sizes.height)
 renderer.setPixelRatio(sizes.pixelRatio)
 
