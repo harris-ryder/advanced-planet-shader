@@ -45,10 +45,10 @@ float getMountains(vec3 position)
 
 float noiseMask(vec3 position)
 {
-    return max(simplexNoise4d(vec4(position, 0.0)), 0.0);
+    return max(simplexNoise4d(vec4(position*0.5, 0.0)), 0.0);
 }
 
-float getWobble(vec3 position)
+float getOcean(vec3 position)
 {
     float wobble = 0.0;
     float amplitude = 1.0;
@@ -66,12 +66,11 @@ float getWobble(vec3 position)
         amplitude *= PERSISTENCE;
     }
 
-    // return pow(abs(wobble), 2.0) * sign(wobble) * -1.0;
     float oceanFloorShape = -uOceanFloorDepth + wobble * 0.15;
     float continentShape = smoothMin(wobble, oceanFloorShape, uOceanFloorSmoothing);
     continentShape = continentShape * mix(uOceanDepthMultiplier, 1.0, step(0.0, continentShape));
 
-    float mountainMask = 1.0;
+    float mountainMask = noiseMask(position);
     float mountainShape = getMountains(position)*mountainMask;
     float finalShape = 1.0 + (continentShape + mountainShape)*uStrength;
     return finalShape; 
@@ -90,10 +89,10 @@ void main()
   vec3 positionB = csm_Position + biTangent * shift;
 
   // Wobble
-  float elevation = getWobble(csm_Position);
+  float elevation = getOcean(csm_Position);
   csm_Position += elevation * normal;
-  positionA += getWobble(positionA)*normal;
-  positionB += getWobble(positionB)*normal;
+  positionA += getOcean(positionA)*normal;
+  positionB += getOcean(positionB)*normal;
 
   // Compute Normal 
   vec3 toA = normalize(positionA - csm_Position);
