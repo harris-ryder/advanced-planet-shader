@@ -3,15 +3,11 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js'
 import { RGBELoader } from 'three/addons/loaders/RGBELoader.js'
 import CustomShaderMaterial from 'three-custom-shader-material/vanilla'
 import GUI from 'lil-gui'
-import oceanVertexShader from './shaders/sea/vertex.glsl'
 import planetVertexShader from './shaders/planet/vertex.glsl'
 import planetFragmentShader from './shaders/planet/fragment.glsl'
 import { mergeVertices } from 'three/examples/jsm/utils/BufferGeometryUtils.js'
 import { addDebugUniform } from './utils'
 
-/**
- * ! Add Waves to ocean 
- */
 
 // Debug
 const gui = new GUI({ width: 325 })
